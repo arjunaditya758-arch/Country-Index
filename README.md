@@ -48,7 +48,8 @@ Country_Index/
 ├── index.template.html     # UI source (placeholders for injected JSON)
 ├── index.html              # Generated app (open in browser)
 ├── trained_progress.json   # Shared progress when using serve_index.py
-└── README.md
+├── README.md
+└── LICENSE
 ```
 
 ---
@@ -106,3 +107,11 @@ Each entry: `{ "jsonl": bool, "ongoing": bool }`. Legacy boolean values in JSON 
 
 - Run **`python3 generate_index.py`** after updating jurisdiction data, then refresh the browser.
 - Commit **`trained_progress.json`** for shared progress; regenerate to embed it in `index.html` for offline use.
+
+---
+
+## License
+
+This project is **free to use with no restrictions**. You may use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies, and you may use it in your own apps or products — commercial or personal — without asking permission.
+
+See [LICENSE](LICENSE) (The Unlicense — public domain).
