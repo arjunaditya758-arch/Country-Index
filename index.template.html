@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Law Agent — Country Index</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --surface-hover: #243044;
+      --border: #2d3a4f;
+      --text: #e8edf4;
+      --text-muted: #8b9cb3;
+      --accent: #4f8cff;
+      --accent-soft: rgba(79, 140, 255, 0.12);
+      --trained: #3dd68c;
+      --trained-soft: rgba(61, 214, 140, 0.12);
+      --ongoing: #f5a623;
+      --ongoing-soft: rgba(245, 166, 35, 0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      padding: 1.25rem 1.5rem;
+    }
+
+    header h1 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 0.25rem;
+    }
+
+    .progress-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 0.65rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .progress-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .legend-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.25rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .legend-mark.jsonl { color: var(--trained); }
+    .legend-mark.ongoing { color: var(--ongoing); }
+
+    nav.breadcrumb {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.85rem 1.5rem;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    nav.breadcrumb button {
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font: inherit;
+      padding: 0;
+    }
+
+    nav.breadcrumb button:hover { text-decoration: underline; }
+    nav.breadcrumb span.sep { opacity: 0.5; }
+
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+
+    .view-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+
+    .view-subtitle {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .card {
+      display: flex;
+      width: 100%;
+      text-align: left;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+      font: inherit;
+    }
+
+    button.card {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+      padding: 1rem 1.1rem;
+      cursor: pointer;
+    }
+
+    button.card:hover {
+      background: var(--surface-hover);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    button.card:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    div.card {
+      flex-direction: row;
+      align-items: stretch;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    div.card[data-jsonl="true"],
+    .state-item[data-jsonl="true"] {
+      border-color: rgba(61, 214, 140, 0.45);
+    }
+
+    div.card[data-ongoing="true"],
+    .state-item[data-ongoing="true"] {
+      box-shadow: inset 3px 0 0 var(--ongoing);
+    }
+
+    .card-nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+      padding: 1rem 1.1rem 1rem 0;
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      font: inherit;
+      text-align: left;
+    }
+
+    div.card:hover .card-nav {
+      background: var(--surface-hover);
+    }
+
+    div.card:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .card-nav:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    .progress-toggle {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.25rem;
+      align-self: stretch;
+      background: none;
+      border: none;
+      border-right: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      font: inherit;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .progress-toggle.jsonl:hover {
+      background: var(--trained-soft);
+      color: var(--trained);
+    }
+
+    .progress-toggle.ongoing:hover {
+      background: var(--ongoing-soft);
+      color: var(--ongoing);
+    }
+
+    .progress-toggle:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    .progress-mark {
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .progress-mark.jsonl { color: var(--trained); }
+    .progress-mark.ongoing { color: var(--ongoing); }
+
+    .progress-toggle.jsonl[aria-pressed="true"] .progress-mark.jsonl,
+    .progress-toggle.ongoing[aria-pressed="true"] .progress-mark.ongoing {
+      opacity: 1;
+    }
+
+    .card-name { font-weight: 600; font-size: 0.95rem; }
+    .card-meta { font-size: 0.8rem; color: var(--text-muted); }
+
+    .state-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .state-item {
+      display: flex;
+      align-items: stretch;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 0.925rem;
+    }
+
+    .state-name {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem 0.75rem 0;
+    }
+
+    .empty {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      padding: 2rem;
+      text-align: center;
+      background: var(--accent-soft);
+      border-radius: 10px;
+      border: 1px dashed var(--border);
+    }
+
+    .stats {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+    }
+
+    .stat {
+      background: var(--accent-soft);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 0.85rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .stat strong { color: var(--text); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Law Agent Country Index</h1>
+    <p>Browse jurisdictions: continent → country → state / province</p>
+    <div class="progress-legend" aria-hidden="true">
+      <span><span class="legend-mark jsonl">✓</span> JSONL done</span>
+      <span><span class="legend-mark ongoing">●</span> Ongoing work</span>
+    </div>
+  </header>
+
+  <nav class="breadcrumb" id="breadcrumb" aria-label="Breadcrumb"></nav>
+
+  <main id="app"></main>
+
+  <script>
+    const JURISDICTION_INDEX = __JURISDICTION_DATA__;
+    const TRAINED_EMBEDDED = __TRAINED_PROGRESS__;
+
+    const app = document.getElementById("app");
+    const breadcrumb = document.getElementById("breadcrumb");
+    const index = JURISDICTION_INDEX;
+
+    const state = { view: "continents", continentId: null, countryId: null };
+
+    const PROGRESS_STORAGE_KEY = "lawAgentTrainingProgress";
+    const LEGACY_STORAGE_KEY = "lawAgentTrainedCountries";
+    const PROGRESS_IDB = "lawAgentCountryIndex";
+    const PROGRESS_IDB_STORE = "handles";
+    const PROGRESS_IDB_KEY = "trainedProgressFile";
+    const PROGRESS_IDB_MAP_KEY = "progressMap";
+    const LEGACY_IDB_MAP_KEY = "trainedMap";
+
+    let progressMap = {};
+    let progressFileHandle = null;
+    let persistTimer = null;
+
+    function normalizeEntry(value) {
+      if (value === true) return { jsonl: true, ongoing: false };
+      if (value === false) return { jsonl: false, ongoing: false };
+      if (value && typeof value === "object") {
+        return {
+          jsonl: value.jsonl === true,
+          ongoing: value.ongoing === true,
+        };
+      }
+      return { jsonl: false, ongoing: false };
+    }
+
+    function mergeProgress(source) {
+      if (!source || typeof source !== "object") return;
+      for (const [key, value] of Object.entries(source)) {
+        const entry = normalizeEntry(value);
+        if (entry.jsonl || entry.ongoing) progressMap[key] = entry;
+        else delete progressMap[key];
+      }
+    }
+
+    function loadProgressFromLocalStorage() {
+      try {
+        const raw =
+          localStorage.getItem(PROGRESS_STORAGE_KEY) ||
+          localStorage.getItem(LEGACY_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveProgressToLocalStorage(map) {
+      try {
+        localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(map));
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
+      } catch {
+        /* ignore */
+      }
+    }
+
+    async function loadProgressFromIndexedDB() {
+      if (!("indexedDB" in window)) return {};
+      try {
+        const db = await openProgressDb();
+        return new Promise((resolve) => {
+          const tx = db.transaction(PROGRESS_IDB_STORE, "readonly");
+          const store = tx.objectStore(PROGRESS_IDB_STORE);
+          const getNew = store.get(PROGRESS_IDB_MAP_KEY);
+          getNew.onsuccess = () => {
+            const data = getNew.result;
+            if (data != null && typeof data === "object") {
+              resolve(data);
+              return;
+            }
+            const getLegacy = store.get(LEGACY_IDB_MAP_KEY);
+            getLegacy.onsuccess = () => {
+              const legacyData = getLegacy.result;
+              resolve(legacyData && typeof legacyData === "object" ? legacyData : {});
+            };
+            getLegacy.onerror = () => resolve({});
+          };
+          getNew.onerror = () => resolve({});
+        });
+      } catch {
+        return {};
+      }
+    }
+
+    async function saveProgressToIndexedDB(map) {
+      if (!("indexedDB" in window)) return;
+      try {
+        const db = await openProgressDb();
+        const tx = db.transaction(PROGRESS_IDB_STORE, "readwrite");
+        tx.objectStore(PROGRESS_IDB_STORE).put(map, PROGRESS_IDB_MAP_KEY);
+      } catch {
+        /* ignore */
+      }
+    }
+
+    function openProgressDb() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(PROGRESS_IDB, 1);
+        req.onupgradeneeded = () => req.result.createObjectStore(PROGRESS_IDB_STORE);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function loadProgressFileHandle() {
+      if (!("indexedDB" in window)) return null;
+      try {
+        const db = await openProgressDb();
+        return new Promise((resolve) => {
+          const tx = db.transaction(PROGRESS_IDB_STORE, "readonly");
+          const get = tx.objectStore(PROGRESS_IDB_STORE).get(PROGRESS_IDB_KEY);
+          get.onsuccess = () => resolve(get.result || null);
+          get.onerror = () => resolve(null);
+        });
+      } catch {
+        return null;
+      }
+    }
+
+    async function saveProgressFileHandle(handle) {
+      if (!("indexedDB" in window)) return;
+      try {
+        const db = await openProgressDb();
+        const tx = db.transaction(PROGRESS_IDB_STORE, "readwrite");
+        tx.objectStore(PROGRESS_IDB_STORE).put(handle, PROGRESS_IDB_KEY);
+      } catch {
+        /* ignore */
+      }
+    }
+
+    async function readProgressFile(handle) {
+      if (!handle) return {};
+      try {
+        const file = await handle.getFile();
+        const data = JSON.parse(await file.text() || "{}");
+        return data && typeof data === "object" ? data : {};
+      } catch {
+        return {};
+      }
+    }
+
+    async function writeProgressFile(handle, map) {
+      if (!handle) return false;
+      try {
+        const writable = await handle.createWritable();
+        await writable.write(JSON.stringify(map, null, 2) + "\n");
+        await writable.close();
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    async function fetchTrainedFromServer() {
+      if (!location.protocol.startsWith("http")) return {};
+      try {
+        const res = await fetch("/api/trained", { cache: "no-store" });
+        if (!res.ok) return {};
+        const data = await res.json();
+        return data && typeof data === "object" ? data : {};
+      } catch {
+        return {};
+      }
+    }
+
+    async function postTrainedToServer(map) {
+      if (!location.protocol.startsWith("http")) return false;
+      try {
+        const res = await fetch("/api/trained", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(map),
+          keepalive: true,
+        });
+        return res.ok || res.status === 204;
+      } catch {
+        return false;
+      }
+    }
+
+    function schedulePersist() {
+      clearTimeout(persistTimer);
+      persistTimer = setTimeout(() => void persistProgress(), 200);
+    }
+
+    async function persistProgress() {
+      saveProgressToLocalStorage(progressMap);
+      await saveProgressToIndexedDB(progressMap);
+      await postTrainedToServer(progressMap);
+      if (progressFileHandle) {
+        await writeProgressFile(progressFileHandle, progressMap);
+      }
+    }
+
+    async function initProgress() {
+      progressMap = {};
+      mergeProgress(TRAINED_EMBEDDED);
+      mergeProgress(await loadProgressFromIndexedDB());
+      mergeProgress(loadProgressFromLocalStorage());
+      mergeProgress(await fetchTrainedFromServer());
+
+      progressFileHandle = await loadProgressFileHandle();
+      if (progressFileHandle) {
+        let perm = await progressFileHandle.queryPermission({ mode: "readwrite" });
+        if (perm !== "granted") {
+          perm = await progressFileHandle.requestPermission({ mode: "readwrite" });
+        }
+        if (perm === "granted") {
+          mergeProgress(await readProgressFile(progressFileHandle));
+        } else {
+          progressFileHandle = null;
+        }
+      }
+
+      await persistProgress();
+    }
+
+    function continentKey(continentId) {
+      return `continent/${continentId}`;
+    }
+
+    function countryKey(continentId, countryId) {
+      return `${continentId}/${countryId}`;
+    }
+
+    function stateKey(continentId, countryId, stateId) {
+      return `${continentId}/${countryId}/${stateId}`;
+    }
+
+    function getProgress(key) {
+      return progressMap[key] || { jsonl: false, ongoing: false };
+    }
+
+    function isJsonl(key) {
+      return getProgress(key).jsonl === true;
+    }
+
+    function isOngoing(key) {
+      return getProgress(key).ongoing === true;
+    }
+
+    function setProgressField(key, field, value) {
+      const cur = getProgress(key);
+      const next = { jsonl: cur.jsonl, ongoing: cur.ongoing, [field]: value };
+      if (!next.jsonl && !next.ongoing) delete progressMap[key];
+      else progressMap[key] = next;
+      schedulePersist();
+    }
+
+    function syncProgressItem(item, key, itemName) {
+      const { jsonl, ongoing } = getProgress(key);
+      item.dataset.jsonl = jsonl ? "true" : "false";
+      item.dataset.ongoing = ongoing ? "true" : "false";
+
+      const jsonlBtn = item.querySelector(".progress-toggle.jsonl");
+      const ongoingBtn = item.querySelector(".progress-toggle.ongoing");
+      if (jsonlBtn) {
+        jsonlBtn.setAttribute("aria-pressed", jsonl ? "true" : "false");
+        jsonlBtn.setAttribute(
+          "aria-label",
+          jsonl ? `Clear JSONL done for ${itemName}` : `Mark JSONL done for ${itemName}`
+        );
+      }
+      if (ongoingBtn) {
+        ongoingBtn.setAttribute("aria-pressed", ongoing ? "true" : "false");
+        ongoingBtn.setAttribute(
+          "aria-label",
+          ongoing ? `Clear ongoing work for ${itemName}` : `Mark ongoing work for ${itemName}`
+        );
+      }
+    }
+
+    function createProgressToggle(kind, key, itemName, item) {
+      const active = kind === "jsonl" ? isJsonl(key) : isOngoing(key);
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = `progress-toggle ${kind}`;
+      toggle.setAttribute("aria-pressed", active ? "true" : "false");
+      const mark = kind === "jsonl" ? "✓" : "●";
+      const labelKind = kind === "jsonl" ? "JSONL done" : "ongoing work";
+      toggle.setAttribute(
+        "aria-label",
+        active ? `Clear ${labelKind} for ${itemName}` : `Mark ${labelKind} for ${itemName}`
+      );
+      toggle.innerHTML = `<span class="progress-mark ${kind}" aria-hidden="true">${mark}</span>`;
+      toggle.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const next = !(kind === "jsonl" ? isJsonl(key) : isOngoing(key));
+        setProgressField(key, kind, next);
+        syncProgressItem(item, key, itemName);
+      });
+      return toggle;
+    }
+
+    function appendProgressToggles(container, key, itemName) {
+      container.appendChild(createProgressToggle("jsonl", key, itemName, container));
+      container.appendChild(createProgressToggle("ongoing", key, itemName, container));
+      syncProgressItem(container, key, itemName);
+    }
+
+    function countProgress(keys) {
+      let jsonl = 0;
+      let ongoing = 0;
+      for (const key of keys) {
+        const p = getProgress(key);
+        if (p.jsonl) jsonl += 1;
+        if (p.ongoing) ongoing += 1;
+      }
+      return { jsonl, ongoing };
+    }
+
+    function findContinent(id) {
+      return index.continents.find((c) => c.id === id);
+    }
+
+    function findCountry(continent, countryId) {
+      return continent.countries.find((c) => c.id === countryId);
+    }
+
+    function setState(next) {
+      Object.assign(state, next);
+      render();
+    }
+
+    function renderBreadcrumb() {
+      const parts = [];
+      parts.push(`<button type="button" data-nav="continents">Continents</button>`);
+
+      if (state.continentId) {
+        parts.push('<span class="sep">/</span>');
+        const c = findContinent(state.continentId);
+        if (state.view === "countries") {
+          parts.push(`<span>${c.name}</span>`);
+        } else {
+          parts.push(`<button type="button" data-nav="countries" data-continent="${state.continentId}">${c.name}</button>`);
+        }
+      }
+
+      if (state.countryId && state.view === "states") {
+        const c = findContinent(state.continentId);
+        const co = findCountry(c, state.countryId);
+        parts.push('<span class="sep">/</span>');
+        parts.push(`<span>${co.name}</span>`);
+      }
+
+      breadcrumb.innerHTML = parts.join("");
+      breadcrumb.querySelectorAll("button[data-nav]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const nav = btn.dataset.nav;
+          if (nav === "continents") {
+            setState({ view: "continents", continentId: null, countryId: null });
+          } else if (nav === "countries") {
+            setState({ view: "countries", continentId: btn.dataset.continent, countryId: null });
+          }
+        });
+      });
+    }
+
+    function renderContinents() {
+      const totalCountries = index.continents.reduce((n, c) => n + c.countries.length, 0);
+      app.innerHTML = `
+        <div class="view-title">Continents</div>
+        <div class="view-subtitle">${index.continents.length} continents · ${totalCountries} countries in the Law Agent dataset</div>
+        <div class="grid" id="grid"></div>
+      `;
+      const grid = document.getElementById("grid");
+      index.continents.forEach((continent) => {
+        const key = continentKey(continent.id);
+        const countryLabel = `${continent.countries.length} ${continent.countries.length === 1 ? "country" : "countries"}`;
+
+        const card = document.createElement("div");
+        card.className = "card";
+        appendProgressToggles(card, key, continent.name);
+
+        const nav = document.createElement("button");
+        nav.type = "button";
+        nav.className = "card-nav";
+        nav.innerHTML = `
+          <span class="card-name">${continent.name}</span>
+          <span class="card-meta">${countryLabel}</span>
+        `;
+        nav.addEventListener("click", () => {
+          setState({ view: "countries", continentId: continent.id, countryId: null });
+        });
+
+        card.appendChild(nav);
+        grid.appendChild(card);
+      });
+    }
+
+    function renderCountries() {
+      const continent = findContinent(state.continentId);
+      const countryKeys = continent.countries.map((c) => countryKey(state.continentId, c.id));
+      const { jsonl, ongoing } = countProgress(countryKeys);
+      app.innerHTML = `
+        <div class="view-title">${continent.name}</div>
+        <div class="view-subtitle">Select a country</div>
+        <div class="stats">
+          <div class="stat"><strong>${continent.countries.length}</strong> countries</div>
+          <div class="stat"><strong>${jsonl}</strong> JSONL done</div>
+          <div class="stat"><strong>${ongoing}</strong> ongoing</div>
+        </div>
+        <div class="grid" id="grid"></div>
+      `;
+      const grid = document.getElementById("grid");
+      continent.countries.forEach((country) => {
+        const key = countryKey(state.continentId, country.id);
+        const stateLabel = country.states.length === 0
+          ? "No subnational folders"
+          : `${country.states.length} ${country.states.length === 1 ? "state" : "states"}`;
+
+        const card = document.createElement("div");
+        card.className = "card";
+        appendProgressToggles(card, key, country.name);
+
+        const nav = document.createElement("button");
+        nav.type = "button";
+        nav.className = "card-nav";
+        nav.innerHTML = `
+          <span class="card-name">${country.name}</span>
+          <span class="card-meta">${stateLabel}</span>
+        `;
+        nav.addEventListener("click", () => {
+          setState({ view: "states", continentId: state.continentId, countryId: country.id });
+        });
+
+        card.appendChild(nav);
+        grid.appendChild(card);
+      });
+    }
+
+    function renderStates() {
+      const continent = findContinent(state.continentId);
+      const country = findCountry(continent, state.countryId);
+      const stateKeys = country.states.map((s) => stateKey(state.continentId, state.countryId, s.id));
+      const { jsonl, ongoing } = countProgress(stateKeys);
+      app.innerHTML = `
+        <div class="view-title">${country.name}</div>
+        <div class="view-subtitle">${continent.name} · states and provinces</div>
+        <div class="stats">
+          <div class="stat"><strong>${country.states.length}</strong> jurisdictions</div>
+          <div class="stat"><strong>${jsonl}</strong> JSONL done</div>
+          <div class="stat"><strong>${ongoing}</strong> ongoing</div>
+        </div>
+        <div id="list"></div>
+      `;
+      const list = document.getElementById("list");
+      if (country.states.length === 0) {
+        list.innerHTML = `<div class="empty">No state or province folders under <strong>${country.name}</strong>.</div>`;
+        return;
+      }
+      const ul = document.createElement("div");
+      ul.className = "state-list";
+      country.states.forEach((s) => {
+        const key = stateKey(state.continentId, state.countryId, s.id);
+
+        const item = document.createElement("div");
+        item.className = "state-item";
+        appendProgressToggles(item, key, s.name);
+
+        const label = document.createElement("span");
+        label.className = "state-name";
+        label.textContent = s.name;
+        item.appendChild(label);
+
+        ul.appendChild(item);
+      });
+      list.appendChild(ul);
+    }
+
+    function render() {
+      renderBreadcrumb();
+      if (state.view === "continents") renderContinents();
+      else if (state.view === "countries") renderCountries();
+      else if (state.view === "states") renderStates();
+    }
+
+    window.addEventListener("beforeunload", () => {
+      saveProgressToLocalStorage(progressMap);
+      void saveProgressToIndexedDB(progressMap);
+      if (location.protocol.startsWith("http") && navigator.sendBeacon) {
+        navigator.sendBeacon(
+          "/api/trained",
+          new Blob([JSON.stringify(progressMap)], { type: "application/json" })
+        );
+      }
+    });
+
+    initProgress().then(() => render());
+  </script>
+</body>
+</html>
