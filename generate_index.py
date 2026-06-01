@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Regenerate self-contained index.html from the Law Agent folder tree."""
+"""Regenerate self-contained index.html from the jurisdiction folder tree."""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
-LAW_AGENT = Path(__file__).resolve().parent.parent
+DATA_ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = Path(__file__).resolve().parent
 TEMPLATE = OUT_DIR / "index.template.html"
 OUT_HTML = OUT_DIR / "index.html"
@@ -45,7 +45,7 @@ def load_trained_progress() -> dict:
 
 def scan() -> dict:
     continents = []
-    for continent_path in sorted(LAW_AGENT.iterdir()):
+    for continent_path in sorted(DATA_ROOT.iterdir()):
         if not continent_path.is_dir() or continent_path.name.startswith("."):
             continue
         if continent_path.name in SKIP:

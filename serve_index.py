@@ -93,7 +93,7 @@ def main() -> None:
 
     server = ThreadingHTTPServer(("127.0.0.1", port), IndexHandler)
     url = f"http://127.0.0.1:{port}/index.html"
-    print(f"Law Agent Country Index — {url}")
+    print(f"Country Index — {url}")
     print("  JSONL + ongoing toggles save to trained_progress.json")
     try:
         server.serve_forever()

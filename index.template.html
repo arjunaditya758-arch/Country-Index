@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Law Agent — Country Index</title>
+  <title>Country Index</title>
   <style>
     :root {
       --bg: #0f1419;
@@ -303,7 +303,7 @@
 </head>
 <body>
   <header>
-    <h1>Law Agent Country Index</h1>
+    <h1>Country Index</h1>
     <p>Browse jurisdictions: continent → country → state / province</p>
     <div class="progress-legend" aria-hidden="true">
       <span><span class="legend-mark jsonl">✓</span> JSONL done</span>
@@ -325,9 +325,9 @@
 
     const state = { view: "continents", continentId: null, countryId: null };
 
-    const PROGRESS_STORAGE_KEY = "lawAgentTrainingProgress";
-    const LEGACY_STORAGE_KEY = "lawAgentTrainedCountries";
-    const PROGRESS_IDB = "lawAgentCountryIndex";
+    const PROGRESS_STORAGE_KEY = "countryIndexTrainingProgress";
+    const LEGACY_STORAGE_KEY = "countryIndexTrainedCountries";
+    const PROGRESS_IDB = "countryIndexApp";
     const PROGRESS_IDB_STORE = "handles";
     const PROGRESS_IDB_KEY = "trainedProgressFile";
     const PROGRESS_IDB_MAP_KEY = "progressMap";
@@ -684,7 +684,7 @@
       const totalCountries = index.continents.reduce((n, c) => n + c.countries.length, 0);
       app.innerHTML = `
         <div class="view-title">Continents</div>
-        <div class="view-subtitle">${index.continents.length} continents · ${totalCountries} countries in the Law Agent dataset</div>
+        <div class="view-subtitle">${index.continents.length} continents · ${totalCountries} countries indexed</div>
         <div class="grid" id="grid"></div>
       `;
       const grid = document.getElementById("grid");
