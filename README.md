@@ -112,6 +112,6 @@ Each entry: `{ "jsonl": bool, "ongoing": bool }`. Legacy boolean values in JSON 
 
 ## License
 
-This project is **free to use with no restrictions**. You may use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies, and you may use it in your own apps or products — commercial or personal — without asking permission.
+Released under the **[MIT License](LICENSE)**. You may use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies, including in your own apps or products — commercial or personal. Include the copyright notice and license text when you redistribute the software.
 
-See [LICENSE](LICENSE) (The Unlicense — public domain).
+See [LICENSE](LICENSE) for the full terms.
